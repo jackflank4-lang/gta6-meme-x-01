@@ -23,10 +23,14 @@ try {
   process.exit(1);
 }
 // Fail fast if the copied file is not a POST.json object with a url string:
-// the gate refuses a malformed post file, so catch it here instead.
+// the gate refuses a malformed post file, so catch it here instead. The
+// url must also be an X post address in the shape the gate's post_url check
+// accepts — https://x.com/<handle>/status/<digits> (or the same on
+// twitter.com) — so a placeholder or a wrong link fails here, not at grading.
 const copied = JSON.parse(readFileSync(join(OUTPUT_DIR, 'POST.json'), 'utf8'));
-if (typeof copied !== 'object' || copied === null || typeof copied.url !== 'string' || !copied.url.startsWith('https://x.com/')) {
-  console.error('POST.json in /output is not an object with an https://x.com/ url string');
+const POST_URL_RE = /^https:\/\/(x\.com|twitter\.com)\/[^/]+\/status\/\d+$/;
+if (typeof copied !== 'object' || copied === null || typeof copied.url !== 'string' || !POST_URL_RE.test(copied.url)) {
+  console.error('POST.json in /output is not an object with an https://x.com/<handle>/status/<digits> url string');
   process.exit(1);
 }
 console.log(`POST.json copied to ${OUTPUT_DIR}: ${copied.url}`);
